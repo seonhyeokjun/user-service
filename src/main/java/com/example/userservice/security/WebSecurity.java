@@ -17,7 +17,7 @@ public class WebSecurity {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize ->
                         authorize
-                                .requestMatchers("/users/**").permitAll() // "/users/**" 경로에 대한 요청 허용
+                                .requestMatchers("/users/**", "/user-service/**").permitAll() // "/users/**" 경로에 대한 요청 허용
                                 .anyRequest().authenticated() // 그 외의 모든 요청은 인증 필요
                 )
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
