@@ -32,7 +32,7 @@ public class WebSecurity {
                         authorize
 //                                .requestMatchers("/users/**", "/user-service/**").permitAll() // "/users/**" 경로에 대한 요청 허용
                                 .requestMatchers("/**").access((authentication, context) ->
-                                        new IpAddressMatcher("192.168.1.0/24").matches(context.getRequest())
+                                        new IpAddressMatcher("192.168.0.5").matches(context.getRequest())
                                                 ? new AuthorizationDecision(true)
                                                 : new AuthorizationDecision(false))
                                 .anyRequest().authenticated() // 그 외의 모든 요청은 인증 필요
