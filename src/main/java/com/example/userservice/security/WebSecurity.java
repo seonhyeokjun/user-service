@@ -32,6 +32,7 @@ public class WebSecurity {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize ->
                         authorize
+                                .requestMatchers("/actuator/**").permitAll()
 //                                .requestMatchers("/users/**", "/user-service/**").permitAll() // "/users/**" 경로에 대한 요청 허용
                                 .requestMatchers("/**").access((authentication, context) ->
                                         new IpAddressMatcher("192.168.0.5").matches(context.getRequest())
