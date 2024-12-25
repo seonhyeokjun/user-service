@@ -2,11 +2,16 @@ server:
   port: 0
 
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+#  datasource:
+#    url: jdbc:h2:mem:testdb
+#    driver-class-name: org.h2.Driver
+#    username: sa
+#    password:
   h2:
     console:
       enabled: true
@@ -33,10 +38,10 @@ logging:
     com.example.userservice: DEBUG
 
 management:
-  endpoint:
+  endpoints:
     web:
       exposure:
-        include: refresh, health, beans
+        include: refresh, health, beans, busrefresh
 
 #token:
 #  secret: user_token
