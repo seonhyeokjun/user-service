@@ -40,6 +40,8 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp'
     // feign client
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    // Resilience4J
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j'
 
     // h2
     runtimeOnly 'com.h2database:h2'
