@@ -10,12 +10,18 @@ import io.micrometer.core.annotation.Timed;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.core.env.Environment;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.ArrayList;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/")
@@ -74,10 +80,33 @@ public class UserController {
     }
 
     @GetMapping("/users/{userId}")
-    public ResponseEntity<ResponseUser> getUser(@PathVariable String userId) {
+    public ResponseEntity getUser(@PathVariable String userId) {
         UserDto userDto = userService.getUserByUserId(userId);
         ResponseUser responseUser = new ModelMapper().map(userDto, ResponseUser.class);
 
-        return ResponseEntity.status(HttpStatus.OK).body(responseUser);
+        EntityModel<ResponseUser> entityModel = EntityModel.of(responseUser);
+        WebMvcLinkBuilder linkTo = linkTo(methodOn(UserController.class).getUser(userId));
+        entityModel.add(linkTo.withRel("all-users"));
+
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(entityModel);
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
+    }
+
+    @GetMapping("/user/hateoas/")
+    public ResponseEntity<CollectionModel<EntityModel<ResponseUser>>> getUsersWithHateoas() {
+        List<EntityModel<ResponseUser>> result = new ArrayList<>();
+        Iterable<UserEntity> users = userService.getUserByAll();
+
+        for (UserEntity user : users) {
+            EntityModel entityModel = EntityModel.of(user);
+            entityModel.add(linkTo(methodOn(this.getClass()).getUser(user.getUserId())).withSelfRel());
+
+            result.add(entityModel);
+        }
+
+        return ResponseEntity.ok(CollectionModel.of(result, linkTo(methodOn(this.getClass()).getUsersWithHateoas()).withSelfRel()));
     }
 }
