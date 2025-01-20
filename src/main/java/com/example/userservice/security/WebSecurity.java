@@ -33,6 +33,8 @@ public class WebSecurity {
                 .authorizeHttpRequests(authorize ->
                         authorize
                                 .requestMatchers("/actuator/**").permitAll()
+                                .requestMatchers("/health_check", "/welcome").permitAll()
+                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**").permitAll()
 //                                .requestMatchers("/users/**", "/user-service/**").permitAll() // "/users/**" 경로에 대한 요청 허용
                                 .requestMatchers("/**").access((authentication, context) ->
                                         new IpAddressMatcher("192.168.0.15").matches(context.getRequest())

@@ -7,6 +7,9 @@ import com.example.userservice.vo.Greeting;
 import com.example.userservice.vo.RequestUser;
 import com.example.userservice.vo.ResponseUser;
 import io.micrometer.core.annotation.Timed;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.core.env.Environment;
@@ -25,6 +28,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/")
+@Tag(name = "user-controller", description = "일반 사용자 서비를 위한 컨트롤러입니다.")
 public class UserController {
     private final Environment env;
     private final Greeting greeting;
@@ -36,6 +40,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    @Operation(summary = "Health check API", description = "Health check를 위한 API (포트 및 Token Secret 정보 확인 가능)")
     @GetMapping("/health_check")
     @Timed(value = "users.status", longTask = true)
     public String status() {
@@ -47,6 +52,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "환영 메시지 출력 API",
+            description = "Welcome message를 출력하기 위한 API"
+    )
     @GetMapping("/welcome")
     @Timed(value = "users.status", longTask = true)
     public String welcome() {
@@ -54,6 +63,15 @@ public class UserController {
         return greeting.getMessage();
     }
 
+    @Operation(
+            summary = "사용자 회원 가입을 위한 API",
+            description = "user-service에 회원 가입을 위한 API",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "CREATED"),
+                    @ApiResponse(responseCode = "400", description = "BAD REQUEST"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR")
+            }
+    )
     @PostMapping("/users")
     public ResponseEntity<ResponseUser> createUser(@RequestBody RequestUser user) {
         ModelMapper modelMapper = new ModelMapper();
@@ -67,6 +85,16 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseUser);
     }
 
+    @Operation(
+            summary = "전체 사용자 목록조회 API",
+            description = "현재 회원 가입 된 전체 사용자 목록을 조회하기 위한 API",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized (인증 실패 오류)"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden (권한이 없는 페이지에 엑세스)"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR")
+            }
+    )
     @GetMapping("/users")
     public ResponseEntity<List<ResponseUser>> getUsers() {
         Iterable<UserEntity> userList = userService.getUserByAll();
@@ -79,9 +107,25 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
+    @Operation(
+            summary = "사용자 정보 상세조회 API",
+            description = "사용자에 대한 상세 정보조회를 위한 API (사용자 정보 + 주문 내역 확인)",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized (인증 실패 오류)"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden (권한이 없는 페이지에 엑세스)"),
+                    @ApiResponse(responseCode = "404", description = "NOT FOUND (회원 정보가 없을 경우)"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR")
+            }
+    )
     @GetMapping("/users/{userId}")
     public ResponseEntity getUser(@PathVariable String userId) {
         UserDto userDto = userService.getUserByUserId(userId);
+
+        if (userDto == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
         ResponseUser responseUser = new ModelMapper().map(userDto, ResponseUser.class);
 
         EntityModel<ResponseUser> entityModel = EntityModel.of(responseUser);
